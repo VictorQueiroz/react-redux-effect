@@ -1,0 +1,23 @@
+{
+  "name": "redux-effect-js",
+  "version": "0.0.2",
+  "description": "Dispatch an action and run an effect that might dispatch an action if it matches.",
+  "main": "index.js",
+  "files": [
+    "**/*.{d.ts,map,js}"
+  ],
+  "scripts": {
+    "prepublishOnly": "npx tsc",
+    "test": "npx tsc",
+    "build": "npx tsc"
+  },
+  "author": "Victor Queiroz <victorcqueirozg@gmail.com>",
+  "license": "UNLICENSED",
+  "devDependencies": {
+    "typescript": "^5.1.6"
+  },
+  "dependencies": {
+    "eventual-js": "^0.0.11",
+    "redux": "^4.2.1"
+  }
+}
