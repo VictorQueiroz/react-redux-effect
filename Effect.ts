@@ -45,6 +45,9 @@ export default abstract class Effect<Store extends IStore> extends EventEmitter<
       child.run(action);
     }
   }
+  public dispatch(action: StoreAction<Store>) {
+    this.emit("action", action);
+  }
   public add(effect: Effect<Store>) {
     this.#children.add(effect);
   }

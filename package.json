@@ -2,7 +2,7 @@
   "name": "redux-effect-js",
   "version": "0.0.3",
   "description": "Dispatch an action and run an effect that might dispatch an action if it matches.",
-  "main": "index.js",
+  "main": "./index.js",
   "files": [
     "**/*.{d.ts,map,js}"
   ],
