@@ -59,7 +59,7 @@ export function beginTask(action: IEffectTaskAction): IBeginTaskAction {
 
 export interface IBeginTaskAction {
   type: ReduxEffectActionType.BeginTask;
-  action: IAction;
+  action: IEffectTaskAction;
 }
 
 type EffectStoreAction<T extends IStore> =
