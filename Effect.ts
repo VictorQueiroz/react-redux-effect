@@ -26,14 +26,14 @@ export interface IEffect<Store extends IStore> {
 
 export const TaskIdProp = Symbol("reduxEffectTaskId");
 
-export type EffectTaskId = number;
+export type EffectTaskId = string;
 
 export interface IEffectTaskAction<T = string> {
-  [TaskIdProp]: number;
+  [TaskIdProp]: EffectTaskId;
   type: T;
 }
 
-export function finishTask(taskId: number): IFinishTaskAction {
+export function finishTask(taskId: EffectTaskId): IFinishTaskAction {
   return {
     type: ReduxEffectActionType.FinishTask,
     taskId,
@@ -42,7 +42,7 @@ export function finishTask(taskId: number): IFinishTaskAction {
 
 export interface IFinishTaskAction {
   type: ReduxEffectActionType.FinishTask;
-  taskId: number;
+  taskId: EffectTaskId;
 }
 
 export enum ReduxEffectActionType {
