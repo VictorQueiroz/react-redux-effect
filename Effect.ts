@@ -1,18 +1,16 @@
 import { EventEmitter } from "eventual-js";
 
-export interface IAction {
-  type: string;
+export interface IAction<T extends string = string> {
+  type: T;
 }
 
-export type ActionLike = IAction | IBeginTaskAction | IFinishTaskAction;
-
-export interface IStore<S = unknown, A extends ActionLike = ActionLike> {
+export interface IStore<S = unknown, A extends IAction = IAction> {
   getState(): S;
   dispatch(action: A): void;
 }
 
-export interface IEffectEventMap {
-  action: ActionLike;
+export interface IEffectEventMap<Store extends IStore> {
+  action: EffectStoreAction<Store>;
   unhandledRejection: unknown;
 }
 
@@ -28,45 +26,73 @@ export interface IEffect<Store extends IStore> {
 
 const TaskIdProp = Symbol("reduxEffectTaskId");
 
-export interface IEffectTaskAction {
-  [TaskIdProp]: number;
-  type: string;
-}
+export type EffectTaskId = number;
 
-function finishTask(taskId: number): IFinishTaskAction {
+export function createTaskAction<T extends IAction>(
+  taskId: EffectTaskId,
+  action: T
+): T & IEffectTaskAction<T["type"]> {
   return {
-    type: "@@ReduxEffectActionType/FinishTaskAction",
+    ...action,
     [TaskIdProp]: taskId,
   };
 }
 
-export interface IFinishTaskAction extends IEffectTaskAction {
-  type: "@@ReduxEffectActionType/FinishTaskAction";
+export interface ITestAction1 {
+  type: "A";
+  [TaskIdProp]: EffectTaskId;
 }
 
-function beginTask<T extends IEffectTaskAction>(action: T): IBeginTaskAction {
+export interface IEffectTaskAction<T = string> {
+  [TaskIdProp]: number;
+  type: T;
+}
+
+export function finishTask(taskId: number): IFinishTaskAction {
   return {
-    action,
-    type: "@@ReduxEffectActionType/BeginTaskAction",
-    [TaskIdProp]: action[TaskIdProp],
+    type: ReduxEffectActionType.FinishTask,
+    taskId,
   };
 }
 
-export interface IBeginTaskAction extends IEffectTaskAction {
-  type: "@@ReduxEffectActionType/BeginTaskAction";
+export interface IFinishTaskAction {
+  type: ReduxEffectActionType.FinishTask;
+  taskId: number;
+}
+
+export enum ReduxEffectActionType {
+  BeginTask = "@@ReduxEffectActionType/BeginTask",
+  FinishTask = "@@ReduxEffectActionType/FinishTask",
+}
+
+export function beginTask(action: IEffectTaskAction): IBeginTaskAction {
+  return {
+    action,
+    type: ReduxEffectActionType.BeginTask,
+  };
+}
+
+export interface IBeginTaskAction {
+  type: ReduxEffectActionType.BeginTask;
   action: IAction;
 }
 
+type EffectStoreAction<T extends IStore> =
+  | StoreAction<T>
+  | IBeginTaskAction
+  | IFinishTaskAction
+  | IEffectTaskAction;
+
 export default abstract class Effect<
-  Store = IStore
-> extends EventEmitter<IEffectEventMap> {
+  Store extends IStore<any, IBeginTaskAction | IFinishTaskAction>
+> extends EventEmitter<IEffectEventMap<Store>> {
   readonly #children;
   #pending = Promise.resolve();
   public constructor() {
     super();
     this.#children = new Set<Effect<Store>>();
   }
-  public run(action: StoreAction<Store>) {
+  public run(action: EffectStoreAction<Store>) {
     if (this.shouldProcessAction(action)) {
       const requiresFinishedActions = TaskIdProp in action;
       const taskId = requiresFinishedActions ? action[TaskIdProp] : null;
@@ -89,14 +115,28 @@ export default abstract class Effect<
       child.run(action);
     }
   }
-  public dispatch(action: ActionLike) {
+  public dispatch(action: EffectStoreAction<Store>) {
     this.emit("action", action);
   }
   public add(effect: Effect<Store>) {
     this.#children.add(effect);
   }
-  protected shouldProcessAction(_: StoreAction<Store>): boolean {
+  protected shouldProcessAction(_: EffectStoreAction<Store>): boolean {
     return true;
   }
-  protected abstract onAction(action: StoreAction<Store>): Promise<void>;
+  protected abstract onAction(action: EffectStoreAction<Store>): Promise<void>;
+}
+
+// it should not accept store that do not accept actions with begin and finish task actions
+{
+  type TestActions1 =
+    | {
+        type: "a";
+      }
+    | {
+        type: "b";
+      };
+
+  // @ts-expect-error
+  type Test1 = Effect<IStore<{}, TestActions1>>;
 }
