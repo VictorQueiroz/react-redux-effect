@@ -24,24 +24,9 @@ export interface IEffect<Store extends IStore> {
   addEffect(value: IEffect<Store>): void;
 }
 
-const TaskIdProp = Symbol("reduxEffectTaskId");
+export const TaskIdProp = Symbol("reduxEffectTaskId");
 
 export type EffectTaskId = number;
-
-export function createTaskAction<T extends IAction>(
-  taskId: EffectTaskId,
-  action: T
-): T & IEffectTaskAction<T["type"]> {
-  return {
-    ...action,
-    [TaskIdProp]: taskId,
-  };
-}
-
-export interface ITestAction1 {
-  type: "A";
-  [TaskIdProp]: EffectTaskId;
-}
 
 export interface IEffectTaskAction<T = string> {
   [TaskIdProp]: number;
