@@ -1,6 +1,6 @@
 {
   "name": "redux-effect-js",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Dispatch an action and run an effect that might dispatch an action if it matches.",
   "main": "./index.js",
   "files": [
