@@ -71,14 +71,9 @@ type EffectStoreAction<T extends IStore> =
 export default abstract class Effect<
   Store extends IStore<any, IBeginTaskAction | IFinishTaskAction>
 > extends EventEmitter<IEffectEventMap<Store>> {
-  readonly #children;
-  #parent: Effect<Store> | null;
+  readonly #children = new Set<Effect<Store>>();
+  #parent: Effect<Store> | null = null;
   #pending = Promise.resolve();
-  public constructor() {
-    super();
-    this.#parent = null;
-    this.#children = new Set<Effect<Store>>();
-  }
   public run(action: EffectStoreAction<Store>) {
     if (this.shouldProcessAction(action)) {
       const requiresFinishedActions = TaskIdProp in action;
