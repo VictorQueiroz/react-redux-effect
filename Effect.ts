@@ -72,9 +72,11 @@ export default abstract class Effect<
   Store extends IStore<any, IBeginTaskAction | IFinishTaskAction>
 > extends EventEmitter<IEffectEventMap<Store>> {
   readonly #children;
+  #parent: Effect<Store> | null;
   #pending = Promise.resolve();
   public constructor() {
     super();
+    this.#parent = null;
     this.#children = new Set<Effect<Store>>();
   }
   public run(action: EffectStoreAction<Store>) {
@@ -101,15 +103,23 @@ export default abstract class Effect<
     }
   }
   public dispatch(action: EffectStoreAction<Store>) {
-    this.emit("action", action);
+    this.#root().emit("action", action);
   }
   public add(effect: Effect<Store>) {
+    effect.#parent = this;
     this.#children.add(effect);
   }
   protected shouldProcessAction(_: EffectStoreAction<Store>): boolean {
     return true;
   }
   protected abstract onAction(action: EffectStoreAction<Store>): Promise<void>;
+  #root() {
+    let parent: Effect<Store> = this;
+    while (parent.#parent) {
+      parent = parent.#parent;
+    }
+    return parent;
+  }
 }
 
 // it should not accept store that do not accept actions with begin and finish task actions
